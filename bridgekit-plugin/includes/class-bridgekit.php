@@ -40,6 +40,9 @@ final class BridgeKit {
         // Register REST API endpoints
         add_action( 'rest_api_init', [ RestAPI::class, 'register_routes' ] );
 
+        // Add CORS headers for Chrome extension requests
+        add_action( 'rest_api_init', [ self::class, 'add_cors_headers' ] );
+
         // Admin pages (only in admin context)
         if ( is_admin() ) {
             Admin::init();
@@ -47,6 +50,26 @@ final class BridgeKit {
 
         // Schedule cleanup cron
         $this->schedule_cleanup();
+    }
+
+    /**
+     * Add CORS headers to allow Chrome extension access to the REST API.
+     */
+    public static function add_cors_headers(): void {
+        // Allow requests from Chrome extensions
+        remove_filter( 'rest_pre_serve_request', 'rest_send_cors_headers' );
+        add_filter( 'rest_pre_serve_request', function ( $value ) {
+            $origin = get_http_origin();
+
+            // Allow Chrome extension origins and any origin for our specific endpoints
+            header( 'Access-Control-Allow-Origin: *' );
+            header( 'Access-Control-Allow-Methods: GET, POST, OPTIONS' );
+            header( 'Access-Control-Allow-Headers: Authorization, Content-Type, X-WP-Nonce' );
+            header( 'Access-Control-Allow-Credentials: true' );
+            header( 'Access-Control-Expose-Headers: X-WP-Total, X-WP-TotalPages' );
+
+            return $value;
+        });
     }
 
     /**

@@ -72,6 +72,8 @@ export async function testConnection() {
     const url = await getEndpointUrl('/status');
     const auth = await getAuthHeader();
 
+    console.log('[BridgeKit] Testing connection to:', url);
+
     const response = await fetch(url, {
       method: 'GET',
       headers: {
@@ -79,6 +81,8 @@ export async function testConnection() {
         'Content-Type': 'application/json',
       },
     });
+
+    console.log('[BridgeKit] Response status:', response.status);
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -91,7 +95,13 @@ export async function testConnection() {
     const data = await response.json();
     return { success: true, message: 'Connected successfully!', data };
   } catch (err) {
-    return { success: false, message: err.message };
+    console.error('[BridgeKit] Connection error:', err);
+    // Provide more helpful error messages
+    let message = err.message;
+    if (message === 'Failed to fetch') {
+      message = 'Failed to fetch — check that your Site URL is correct and the site is accessible. Make sure BridgeKit plugin is activated.';
+    }
+    return { success: false, message };
   }
 }
 
