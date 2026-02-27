@@ -39,10 +39,12 @@ $query  = new WP_Query( $args );
 $counts = BridgeKit\Library::get_status_counts();
 
 // Flash messages
-$imported = absint( $_GET['imported'] ?? 0 );
-$deleted  = absint( $_GET['deleted'] ?? 0 );
-$error    = sanitize_text_field( $_GET['error'] ?? '' );
-$reimport = sanitize_text_field( $_GET['reimport'] ?? '' );
+$imported     = absint( $_GET['imported'] ?? 0 );
+$deleted      = absint( $_GET['deleted'] ?? 0 );
+$bulk_deleted = absint( $_GET['bulk_deleted'] ?? 0 );
+$bulk_reimport = absint( $_GET['bulk_reimport'] ?? 0 );
+$error        = sanitize_text_field( $_GET['error'] ?? '' );
+$reimport     = sanitize_text_field( $_GET['reimport'] ?? '' );
 ?>
 
 <div class="wrap bk-dashboard">
@@ -60,6 +62,18 @@ $reimport = sanitize_text_field( $_GET['reimport'] ?? '' );
     <?php if ( $deleted ) : ?>
         <div class="notice notice-success is-dismissible">
             <p><?php esc_html_e( 'Template deleted.', 'bridgekit' ); ?></p>
+        </div>
+    <?php endif; ?>
+
+    <?php if ( $bulk_deleted ) : ?>
+        <div class="notice notice-success is-dismissible">
+            <p><?php printf( esc_html( _n( '%d template deleted.', '%d templates deleted.', $bulk_deleted, 'bridgekit' ) ), $bulk_deleted ); ?></p>
+        </div>
+    <?php endif; ?>
+
+    <?php if ( $bulk_reimport ) : ?>
+        <div class="notice notice-info is-dismissible">
+            <p><?php printf( esc_html( _n( '%d template queued for re-import.', '%d templates queued for re-import.', $bulk_reimport, 'bridgekit' ) ), $bulk_reimport ); ?></p>
         </div>
     <?php endif; ?>
 
@@ -112,10 +126,43 @@ $reimport = sanitize_text_field( $_GET['reimport'] ?? '' );
             <button type="submit" class="button"><?php esc_html_e( 'Search', 'bridgekit' ); ?></button>
         </form>
 
-        <button type="button" class="button button-primary" id="bk-upload-toggle">
-            <span class="dashicons dashicons-upload" style="vertical-align: middle; margin-top: -2px;"></span>
-            <?php esc_html_e( 'Upload ZIP', 'bridgekit' ); ?>
-        </button>
+        <div class="bk-toolbar-right">
+            <button type="button" class="button" id="bk-select-toggle" style="display:none;">
+                <span class="dashicons dashicons-yes-alt" style="vertical-align: middle; margin-top: -2px;"></span>
+                <?php esc_html_e( 'Select', 'bridgekit' ); ?>
+            </button>
+            <button type="button" class="button button-primary" id="bk-upload-toggle">
+                <span class="dashicons dashicons-upload" style="vertical-align: middle; margin-top: -2px;"></span>
+                <?php esc_html_e( 'Upload ZIP', 'bridgekit' ); ?>
+            </button>
+        </div>
+    </div>
+
+    <!-- Bulk Actions Bar (hidden by default, shown when cards are selected) -->
+    <div id="bk-bulk-bar" class="bk-bulk-bar" style="display: none;">
+        <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" id="bk-bulk-form">
+            <input type="hidden" name="action" value="bridgekit_bulk">
+            <?php wp_nonce_field( 'bridgekit_bulk', 'bridgekit_nonce' ); ?>
+            <div class="bk-bulk-bar-inner">
+                <label class="bk-bulk-select-all">
+                    <input type="checkbox" id="bk-select-all">
+                    <strong id="bk-bulk-count">0</strong> <?php esc_html_e( 'selected', 'bridgekit' ); ?>
+                </label>
+                <div class="bk-bulk-actions">
+                    <button type="submit" name="bulk_action" value="reimport" class="button" onclick="return confirm('<?php esc_attr_e( 'Re-import all selected templates?', 'bridgekit' ); ?>')">
+                        <span class="dashicons dashicons-update" style="font-size:14px; width:14px; height:14px; vertical-align:middle; margin-top:-1px;"></span>
+                        <?php esc_html_e( 'Re-import', 'bridgekit' ); ?>
+                    </button>
+                    <button type="submit" name="bulk_action" value="delete" class="button bk-btn-danger" onclick="return confirm('<?php esc_attr_e( 'Delete all selected templates and their files? This cannot be undone.', 'bridgekit' ); ?>')">
+                        <span class="dashicons dashicons-trash" style="font-size:14px; width:14px; height:14px; vertical-align:middle; margin-top:-1px;"></span>
+                        <?php esc_html_e( 'Delete', 'bridgekit' ); ?>
+                    </button>
+                    <button type="button" class="button" id="bk-bulk-cancel">
+                        <?php esc_html_e( 'Cancel', 'bridgekit' ); ?>
+                    </button>
+                </div>
+            </div>
+        </form>
     </div>
 
     <!-- Upload Form (hidden by default) -->
@@ -155,6 +202,9 @@ $reimport = sanitize_text_field( $_GET['reimport'] ?? '' );
             ?>
                 <div class="bk-card" data-id="<?php echo esc_attr( $post_id ); ?>">
                     <div class="bk-card-thumb">
+                        <label class="bk-card-checkbox" title="<?php esc_attr_e( 'Select', 'bridgekit' ); ?>">
+                            <input type="checkbox" name="bulk_ids[]" value="<?php echo esc_attr( $post_id ); ?>" form="bk-bulk-form" class="bk-bulk-check">
+                        </label>
                         <img
                             src="<?php echo esc_url( $entry['thumbnail_url'] ); ?>"
                             alt="<?php echo esc_attr( $entry['title'] ); ?>"

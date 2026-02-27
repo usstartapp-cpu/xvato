@@ -140,4 +140,78 @@
     // Already handled via inline onclick — just ensuring they exist
   });
 
+  // ─── Bulk Selection ────────────────────────────────────────
+  var selectToggle = document.getElementById('bk-select-toggle');
+  var bulkBar      = document.getElementById('bk-bulk-bar');
+  var bulkForm     = document.getElementById('bk-bulk-form');
+  var bulkCount    = document.getElementById('bk-bulk-count');
+  var selectAll    = document.getElementById('bk-select-all');
+  var bulkCancel   = document.getElementById('bk-bulk-cancel');
+  var checkboxes   = document.querySelectorAll('.bk-bulk-check');
+
+  // Show "Select" button only when there are cards
+  if (selectToggle && checkboxes.length > 0) {
+    selectToggle.style.display = '';
+  }
+
+  function updateBulkCount() {
+    var checked = document.querySelectorAll('.bk-bulk-check:checked');
+    if (bulkCount) bulkCount.textContent = checked.length;
+
+    if (bulkBar) {
+      bulkBar.style.display = checked.length > 0 ? 'block' : 'none';
+    }
+
+    // Update select-all state
+    if (selectAll && checkboxes.length > 0) {
+      selectAll.checked = checked.length === checkboxes.length;
+      selectAll.indeterminate = checked.length > 0 && checked.length < checkboxes.length;
+    }
+  }
+
+  if (selectToggle) {
+    selectToggle.addEventListener('click', function () {
+      var grid = document.querySelector('.bk-grid');
+      if (grid) {
+        grid.classList.toggle('bk-selecting');
+      }
+      // Toggle button text
+      var isSelecting = grid && grid.classList.contains('bk-selecting');
+      selectToggle.innerHTML = isSelecting
+        ? '<span class="dashicons dashicons-no" style="vertical-align:middle; margin-top:-2px;"></span> Cancel'
+        : '<span class="dashicons dashicons-yes-alt" style="vertical-align:middle; margin-top:-2px;"></span> Select';
+
+      if (!isSelecting) {
+        // Deselect all
+        checkboxes.forEach(function (cb) { cb.checked = false; });
+        updateBulkCount();
+      }
+    });
+  }
+
+  checkboxes.forEach(function (cb) {
+    cb.addEventListener('change', updateBulkCount);
+  });
+
+  if (selectAll) {
+    selectAll.addEventListener('change', function () {
+      checkboxes.forEach(function (cb) {
+        cb.checked = selectAll.checked;
+      });
+      updateBulkCount();
+    });
+  }
+
+  if (bulkCancel) {
+    bulkCancel.addEventListener('click', function () {
+      checkboxes.forEach(function (cb) { cb.checked = false; });
+      updateBulkCount();
+      var grid = document.querySelector('.bk-grid');
+      if (grid) grid.classList.remove('bk-selecting');
+      if (selectToggle) {
+        selectToggle.innerHTML = '<span class="dashicons dashicons-yes-alt" style="vertical-align:middle; margin-top:-2px;"></span> Select';
+      }
+    });
+  }
+
 })();

@@ -87,6 +87,35 @@ $counts          = BridgeKit\Library::get_status_counts();
         </div>
     <?php endif; ?>
 
+    <?php if ( isset( $_GET['imported_settings'] ) ) : ?>
+        <div class="notice notice-success is-dismissible">
+            <p><?php esc_html_e( 'Settings imported successfully.', 'bridgekit' ); ?></p>
+        </div>
+    <?php endif; ?>
+
+    <?php if ( isset( $_GET['import_error'] ) ) : ?>
+        <div class="notice notice-error is-dismissible">
+            <p>
+            <?php
+            $import_err = sanitize_key( $_GET['import_error'] );
+            switch ( $import_err ) {
+                case 'no_file':
+                    esc_html_e( 'No file selected for import.', 'bridgekit' );
+                    break;
+                case 'invalid_type':
+                    esc_html_e( 'Invalid file type. Please upload a .json file.', 'bridgekit' );
+                    break;
+                case 'invalid_json':
+                    esc_html_e( 'Invalid settings file. Could not parse the JSON data.', 'bridgekit' );
+                    break;
+                default:
+                    esc_html_e( 'Settings import failed.', 'bridgekit' );
+            }
+            ?>
+            </p>
+        </div>
+    <?php endif; ?>
+
     <div class="bk-settings-layout">
         <!-- ─── Left Column: Settings ──────────────────────────── -->
         <div class="bk-settings-main">
@@ -268,6 +297,44 @@ $counts          = BridgeKit\Library::get_status_counts();
                                     );
                                     ?>
                                 </span>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Settings Export / Import -->
+            <div class="bk-card">
+                <h2 class="bk-card-header">
+                    <span class="dashicons dashicons-migrate"></span>
+                    <?php esc_html_e( 'Export / Import Settings', 'bridgekit' ); ?>
+                </h2>
+                <div class="bk-card-content">
+                    <table class="form-table" role="presentation">
+                        <tr>
+                            <th scope="row"><?php esc_html_e( 'Export', 'bridgekit' ); ?></th>
+                            <td>
+                                <a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=bridgekit_export_settings' ), 'bridgekit_export_settings', 'bridgekit_nonce' ) ); ?>"
+                                   class="button">
+                                    <span class="dashicons dashicons-download" style="font-size:16px; width:16px; height:16px; vertical-align:middle; margin-top:-2px;"></span>
+                                    <?php esc_html_e( 'Download Settings JSON', 'bridgekit' ); ?>
+                                </a>
+                                <p class="description"><?php esc_html_e( 'Export your BridgeKit settings to a JSON file for backup or migration.', 'bridgekit' ); ?></p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><?php esc_html_e( 'Import', 'bridgekit' ); ?></th>
+                            <td>
+                                <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" enctype="multipart/form-data" class="bk-import-settings-form">
+                                    <input type="hidden" name="action" value="bridgekit_import_settings">
+                                    <?php wp_nonce_field( 'bridgekit_import_settings', 'bridgekit_nonce' ); ?>
+                                    <input type="file" name="bridgekit_settings_file" accept=".json" required>
+                                    <button type="submit" class="button" onclick="return confirm('<?php esc_attr_e( 'Import settings from this file? Current settings will be overwritten.', 'bridgekit' ); ?>')">
+                                        <span class="dashicons dashicons-upload" style="font-size:16px; width:16px; height:16px; vertical-align:middle; margin-top:-2px;"></span>
+                                        <?php esc_html_e( 'Import', 'bridgekit' ); ?>
+                                    </button>
+                                </form>
+                                <p class="description"><?php esc_html_e( 'Upload a previously exported .json file to restore settings.', 'bridgekit' ); ?></p>
                             </td>
                         </tr>
                     </table>

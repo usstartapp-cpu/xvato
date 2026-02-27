@@ -627,3 +627,123 @@
         align-items: flex-start;
     }
 }
+
+/* ─── Toolbar Right ─────────────────────────────────────────── */
+.bk-toolbar-right {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+/* ─── Bulk Actions Bar ──────────────────────────────────────── */
+.bk-bulk-bar {
+    background: #fff;
+    border: 1px solid #2271b1;
+    border-radius: 8px;
+    padding: 12px 20px;
+    margin-bottom: 16px;
+    animation: bk-slideDown 0.2s ease;
+}
+
+.bk-bulk-bar-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.bk-bulk-select-all {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.bk-bulk-select-all input[type="checkbox"] {
+    margin: 0;
+}
+
+.bk-bulk-actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.bk-bulk-actions .button .dashicons {
+    margin-right: 2px;
+}
+
+/* ─── Card Checkbox ─────────────────────────────────────────── */
+.bk-card-checkbox {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 2;
+    display: none;
+    cursor: pointer;
+    background: #fff;
+    border-radius: 4px;
+    width: 22px;
+    height: 22px;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.bk-card-checkbox input[type="checkbox"] {
+    margin: 0;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+/* Show checkboxes when in selecting mode */
+.bk-selecting .bk-card-checkbox {
+    display: flex;
+}
+
+/* Also show on card hover even when not in bulk-select mode */
+.bk-card:hover .bk-card-checkbox {
+    display: flex;
+}
+
+/* Highlight selected cards */
+.bk-card:has(.bk-bulk-check:checked) {
+    outline: 2px solid #2271b1;
+    outline-offset: -2px;
+}
+
+.bk-card:has(.bk-bulk-check:checked) .bk-card-thumb::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(34, 113, 177, 0.08);
+    pointer-events: none;
+}
+
+/* ─── Settings Export/Import ────────────────────────────────── */
+.bk-import-settings-form {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.bk-import-settings-form input[type="file"] {
+    flex: 1;
+    min-width: 200px;
+}
+
+/* ─── Responsive additions ──────────────────────────────────── */
+@media ( max-width: 782px ) {
+    .bk-bulk-bar-inner {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .bk-toolbar-right {
+        flex-wrap: wrap;
+    }
+}

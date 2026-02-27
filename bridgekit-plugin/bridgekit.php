@@ -47,7 +47,24 @@ function bridgekit_init() {
 add_action( 'plugins_loaded', 'bridgekit_init' );
 
 // ─── Activation / Deactivation ─────────────────────────────────
-register_activation_hook( __FILE__, function () {
+register_activation_hook( __FILE__, function ( $network_wide ) {
+    if ( is_multisite() && $network_wide ) {
+        // Network-activate: run activation on each site
+        $sites = get_sites( [ 'fields' => 'ids', 'number' => 0 ] );
+        foreach ( $sites as $site_id ) {
+            switch_to_blog( $site_id );
+            bridgekit_activate_site();
+            restore_current_blog();
+        }
+    } else {
+        bridgekit_activate_site();
+    }
+});
+
+/**
+ * Per-site activation tasks.
+ */
+function bridgekit_activate_site() {
     // Create tmp directory
     $upload_dir = wp_upload_dir();
     $tmp_dir    = trailingslashit( $upload_dir['basedir'] ) . BRIDGEKIT_TMP_DIR;
@@ -66,7 +83,17 @@ register_activation_hook( __FILE__, function () {
 
     // Store activation time for rate limiting
     update_option( 'bridgekit_activated', time() );
-});
+}
+
+// Handle new site creation on multisite — auto-activate
+add_action( 'wp_initialize_site', function ( $new_site ) {
+    if ( ! is_plugin_active_for_network( plugin_basename( __FILE__ ) ) ) {
+        return;
+    }
+    switch_to_blog( $new_site->blog_id );
+    bridgekit_activate_site();
+    restore_current_blog();
+}, 10, 1 );
 
 register_deactivation_hook( __FILE__, function () {
     flush_rewrite_rules();

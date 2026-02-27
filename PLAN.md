@@ -144,7 +144,7 @@ bridgekit-plugin/
 - [x] Status badges (imported, failed, pending)
 - [x] Re-import button (from stored ZIP)
 - [x] Dependency checker (Elementor version, Pro, theme)
-- [ ] Bulk actions (delete, re-import)
+- [x] Bulk actions (delete, re-import)
 
 ### Phase 5: Polish
 - [x] Error handling + user-facing error messages
@@ -153,8 +153,8 @@ bridgekit-plugin/
 - [x] Extension notifications (import success/failure)
 - [x] Settings page with system diagnostics
 - [x] Maintenance tools (clear tmp, reset failed)
-- [ ] Settings export/import
-- [ ] Multi-site compatibility testing
+- [x] Settings export/import
+- [x] Multi-site compatibility (network activation + new site hooks)
 
 ---
 
