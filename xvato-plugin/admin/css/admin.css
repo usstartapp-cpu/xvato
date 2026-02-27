@@ -1179,15 +1179,46 @@
 }
 
 /* ─── WP Admin Menu Override ────────────────────────────────── */
+/* Ensure the sidebar icon is always 20×20, vertically centered,
+   and never inherits any WP default sizing that could blow it up. */
+#adminmenu .toplevel_page_xvato .wp-menu-image {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 100% !important;
+}
+
 #adminmenu .toplevel_page_xvato .wp-menu-image img,
 #adminmenu .toplevel_page_xvato .wp-menu-image svg {
   width: 20px !important;
   height: 20px !important;
+  min-width: 20px !important;
+  min-height: 20px !important;
   max-width: 20px !important;
   max-height: 20px !important;
-  padding: 7px 0 0 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
   opacity: 0.85;
   object-fit: contain;
+  display: block !important;
+}
+
+/* WP sometimes wraps the data-uri icon in a <br> or resets; catch all children */
+#adminmenu .toplevel_page_xvato .wp-menu-image * {
+  max-width: 20px !important;
+  max-height: 20px !important;
+}
+
+/* Ensure the menu item text sits on the same line as the icon */
+#adminmenu .toplevel_page_xvato .wp-menu-name {
+  display: inline-flex !important;
+  align-items: center !important;
+  vertical-align: middle !important;
+}
+
+#adminmenu .toplevel_page_xvato > a {
+  display: flex !important;
+  align-items: center !important;
 }
 
 #adminmenu .toplevel_page_xvato:hover .wp-menu-image img,

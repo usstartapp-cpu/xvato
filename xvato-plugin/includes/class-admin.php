@@ -19,6 +19,7 @@ class Admin {
     public static function init(): void {
         add_action( 'admin_menu', [ self::class, 'register_menus' ] );
         add_action( 'admin_enqueue_scripts', [ self::class, 'enqueue_assets' ] );
+        add_action( 'admin_head', [ self::class, 'inline_menu_icon_css' ] );
 
         // Handle manual file upload
         add_action( 'admin_post_xvato_upload', [ self::class, 'handle_manual_upload' ] );
@@ -80,6 +81,25 @@ class Admin {
             'xvato-settings',
             [ self::class, 'render_settings' ]
         );
+    }
+
+    /**
+     * Output critical sidebar-icon CSS on every admin page so the
+     * menu icon never reverts to WordPress' oversized default.
+     */
+    public static function inline_menu_icon_css(): void {
+        echo '<style id="xvato-menu-icon">
+#adminmenu .toplevel_page_xvato .wp-menu-image{display:flex!important;align-items:center!important;justify-content:center!important;height:100%!important}
+#adminmenu .toplevel_page_xvato .wp-menu-image img,
+#adminmenu .toplevel_page_xvato .wp-menu-image svg{width:20px!important;height:20px!important;min-width:20px!important;min-height:20px!important;max-width:20px!important;max-height:20px!important;padding:0!important;margin:0!important;opacity:.85;object-fit:contain;display:block!important}
+#adminmenu .toplevel_page_xvato .wp-menu-image *{max-width:20px!important;max-height:20px!important}
+#adminmenu .toplevel_page_xvato .wp-menu-name{display:inline-flex!important;align-items:center!important;vertical-align:middle!important}
+#adminmenu .toplevel_page_xvato>a{display:flex!important;align-items:center!important}
+#adminmenu .toplevel_page_xvato:hover .wp-menu-image img,
+#adminmenu .toplevel_page_xvato.current .wp-menu-image img,
+#adminmenu .toplevel_page_xvato:hover .wp-menu-image svg,
+#adminmenu .toplevel_page_xvato.current .wp-menu-image svg{opacity:1}
+</style>';
     }
 
     /**

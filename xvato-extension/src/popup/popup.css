@@ -5,25 +5,25 @@
 /* ─── CSS Custom Properties (Dark Mode = Default) ───────────── */
 :root,
 [data-theme="dark"] {
-  --xv-bg: #0e0e10;
-  --xv-surface: #18181b;
-  --xv-surface-hover: #1f1f23;
-  --xv-surface-raised: #26262a;
-  --xv-border: #2e2e32;
-  --xv-border-subtle: #232328;
-  --xv-text: #efeff1;
-  --xv-text-secondary: #adadb8;
-  --xv-text-muted: #737380;
+  --xv-bg: #111114;
+  --xv-surface: #19191d;
+  --xv-surface-hover: #202025;
+  --xv-surface-raised: #27272b;
+  --xv-border: #303036;
+  --xv-border-subtle: #26262b;
+  --xv-text: #e8e8ed;
+  --xv-text-secondary: #a0a0ab;
+  --xv-text-muted: #6b6b78;
   --xv-accent: #87E64C;
   --xv-accent-hover: #9dff5e;
-  --xv-accent-muted: rgba(135, 230, 76, 0.12);
+  --xv-accent-muted: rgba(135, 230, 76, 0.10);
   --xv-accent-text: #0e0e10;
-  --xv-danger: #f04747;
-  --xv-warning: #faa61a;
+  --xv-danger: #ef4444;
+  --xv-warning: #f59e0b;
   --xv-success: #87E64C;
-  --xv-info: #5dadec;
-  --xv-input-bg: #0e0e10;
-  --xv-input-border: #2e2e32;
+  --xv-info: #60a5fa;
+  --xv-input-bg: #111114;
+  --xv-input-border: #303036;
   --xv-input-focus: #87E64C;
   --xv-radius: 8px;
   --xv-radius-sm: 6px;
@@ -154,8 +154,8 @@ body {
   gap: 14px;
   padding: 16px;
   border-radius: var(--xv-radius);
-  border: 1px solid var(--xv-accent);
-  background: var(--xv-accent-muted);
+  border: 1px solid var(--xv-border);
+  background: var(--xv-surface);
   animation: xv-fadeIn 0.3s ease;
 }
 
@@ -172,7 +172,7 @@ body {
 .xv-connected-title {
   font-size: 15px;
   font-weight: 700;
-  color: var(--xv-accent);
+  color: var(--xv-text);
   margin-bottom: 2px;
 }
 
@@ -237,8 +237,8 @@ body {
 .xv-status--idle .xv-status-dot { background: var(--xv-text-muted); }
 
 .xv-status--saved {
-  border-color: var(--xv-accent);
-  background: var(--xv-accent-muted);
+  border-color: var(--xv-border);
+  background: var(--xv-surface);
 }
 .xv-status--saved .xv-status-dot { background: var(--xv-accent); }
 
@@ -252,12 +252,12 @@ body {
 }
 
 .xv-status--connected {
-  border-color: var(--xv-accent);
-  background: var(--xv-accent-muted);
+  border-color: var(--xv-border);
+  background: var(--xv-surface);
 }
 .xv-status--connected .xv-status-dot {
   background: var(--xv-accent);
-  box-shadow: 0 0 6px var(--xv-accent), 0 0 12px var(--xv-accent-muted);
+  box-shadow: 0 0 6px var(--xv-accent);
 }
 
 .xv-status--error {
@@ -298,7 +298,7 @@ body {
   letter-spacing: 0.5px;
 }
 
-.xv-accounts-label svg { color: var(--xv-accent); }
+.xv-accounts-label svg { color: var(--xv-text-secondary); }
 
 .xv-accounts-refresh {
   display: flex;
@@ -316,9 +316,9 @@ body {
 }
 
 .xv-accounts-refresh:hover {
-  color: var(--xv-accent);
-  border-color: var(--xv-accent);
-  background: var(--xv-accent-muted);
+  color: var(--xv-text);
+  border-color: var(--xv-text-muted);
+  background: var(--xv-surface-hover);
 }
 
 .xv-accounts-refresh.xv-spinning svg {
@@ -379,8 +379,8 @@ body {
 }
 
 .xv-account-card:hover {
-  border-color: var(--xv-accent);
-  background: var(--xv-accent-muted);
+  border-color: var(--xv-text-muted);
+  background: var(--xv-surface-hover);
 }
 
 .xv-account-card.xv-account--expired {
@@ -402,7 +402,7 @@ body {
   border: 1px solid var(--xv-border);
   font-size: 14px;
   font-weight: 700;
-  color: var(--xv-accent);
+  color: var(--xv-text);
   text-transform: uppercase;
   flex-shrink: 0;
 }
@@ -442,9 +442,9 @@ body {
 }
 
 .xv-account-badge--ready {
-  background: var(--xv-accent-muted);
+  background: rgba(135, 230, 76, 0.06);
   color: var(--xv-accent);
-  border: 1px solid var(--xv-accent);
+  border: 1px solid rgba(135, 230, 76, 0.2);
 }
 
 .xv-account-badge--cookie {
@@ -483,7 +483,7 @@ body {
 
 .xv-account-connect-btn:hover:not(:disabled) {
   background: var(--xv-accent-hover);
-  box-shadow: 0 0 12px var(--xv-accent-muted);
+  box-shadow: 0 2px 8px rgba(135, 230, 76, 0.15);
 }
 
 .xv-account-connect-btn:disabled {
@@ -642,7 +642,7 @@ body {
 
 .xv-input-wrap:focus-within {
   border-color: var(--xv-input-focus);
-  box-shadow: 0 0 0 3px var(--xv-accent-muted);
+  box-shadow: 0 0 0 2px rgba(135, 230, 76, 0.08);
 }
 
 .xv-input-wrap svg {
@@ -712,7 +712,7 @@ body {
 
 .xv-btn--primary:hover:not(:disabled) {
   background: var(--xv-accent-hover);
-  box-shadow: 0 0 20px var(--xv-accent-muted), 0 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 12px rgba(135, 230, 76, 0.15), 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
 .xv-btn--ghost {
@@ -761,8 +761,8 @@ body {
 
 .xv-message--success {
   color: var(--xv-success);
-  border-color: var(--xv-success);
-  background: rgba(135, 230, 76, 0.06);
+  border-color: rgba(135, 230, 76, 0.2);
+  background: rgba(135, 230, 76, 0.04);
 }
 
 .xv-message--error {
@@ -804,7 +804,7 @@ body {
 }
 
 .xv-footer a:hover {
-  color: var(--xv-accent);
+  color: var(--xv-text-secondary);
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -821,7 +821,7 @@ body, body *:not(img):not(svg) {
 .xv-icon-btn:focus-visible,
 .xv-account-connect-btn:focus-visible,
 .xv-manual-toggle:focus-visible {
-  outline: 2px solid var(--xv-accent);
+  outline: 2px solid rgba(135, 230, 76, 0.4);
   outline-offset: 2px;
 }
 
