@@ -10,6 +10,8 @@ Thumbs.db
 
 # Dependencies
 node_modules/
+package.json
+package-lock.json
 vendor/
 
 # Build
@@ -27,3 +29,6 @@ xvato-plugin/admin/build/
 # Logs
 *.log
 debug.log
+
+# Scripts (one-time use)
+scripts/
