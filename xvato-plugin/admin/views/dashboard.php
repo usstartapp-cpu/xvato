@@ -29,7 +29,7 @@ if ( $search ) {
 if ( $status ) {
     $args['meta_query'] = [
         [
-            'key'   => '_bk_import_status',
+            'key'   => '_xv_import_status',
             'value' => $status,
         ],
     ];
@@ -264,7 +264,7 @@ $reimport     = sanitize_text_field( $_GET['reimport'] ?? '' );
                         <?php endif; ?>
 
                         <?php
-                        $log = get_post_meta( $post_id, '_bk_import_log', true );
+                        $log = get_post_meta( $post_id, '_xv_import_log', true );
                         if ( ! empty( $log ) && is_array( $log ) ) :
                             $last_log = end( $log );
                         ?>

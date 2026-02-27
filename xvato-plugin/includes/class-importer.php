@@ -40,10 +40,36 @@ class Importer {
         Library::add_log( $post_id, 'Download complete: ' . basename( $zip_path ) );
 
         // Store the zip path for potential re-import
-        update_post_meta( $post_id, '_bk_zip_path', $zip_path );
+        update_post_meta( $post_id, '_xv_zip_path', $zip_path );
 
         // Continue with the shared import pipeline
         $this->process_zip( $post_id, $zip_path );
+    }
+
+    /**
+     * Download a ZIP from a remote URL and prepare (parse manifest)
+     * WITHOUT auto-importing. The user selects templates from the
+     * Kit Detail page.
+     *
+     * @param int    $post_id      Library CPT entry ID.
+     * @param string $download_url Remote ZIP URL.
+     */
+    public function prepare_from_url( int $post_id, string $download_url ): void {
+        Library::update_status( $post_id, 'downloading' );
+        Library::add_log( $post_id, 'Starting download from URL.' );
+
+        $zip_path = Downloader::download( $download_url );
+
+        if ( is_wp_error( $zip_path ) ) {
+            Library::set_error( $post_id, $zip_path->get_error_message() );
+            return;
+        }
+
+        Library::add_log( $post_id, 'Download complete: ' . basename( $zip_path ) );
+        update_post_meta( $post_id, '_xv_zip_path', $zip_path );
+
+        // Prepare only — no auto-import
+        $this->prepare_kit( $post_id, $zip_path );
     }
 
     /**
@@ -87,12 +113,12 @@ class Importer {
             Library::add_log( $post_id, 'No manifest.json found. Attempting direct import.' );
             $manifest = null;
         } else {
-            update_post_meta( $post_id, '_bk_manifest', $manifest );
+            update_post_meta( $post_id, '_xv_manifest', $manifest );
             Library::add_log( $post_id, 'Manifest parsed: ' . ( $manifest['name'] ?? 'unnamed' ) . ' (' . count( $manifest['templates'] ?? [] ) . ' templates).' );
 
             // Store dependencies
             $deps = $this->extract_dependencies( $manifest );
-            update_post_meta( $post_id, '_bk_dependencies', $deps );
+            update_post_meta( $post_id, '_xv_dependencies', $deps );
         }
 
         // Step 6: Import into Elementor
@@ -109,12 +135,164 @@ class Importer {
         }
 
         // Step 7: Success — record template IDs
-        update_post_meta( $post_id, '_bk_template_ids', $result );
+        update_post_meta( $post_id, '_xv_template_ids', $result );
         Library::update_status( $post_id, 'complete' );
         Library::add_log( $post_id, 'Import complete! ' . count( $result ) . ' template(s) imported.' );
 
         // Clean up extracted files (keep the ZIP for re-import)
         Xvato::delete_directory( $extract_dir );
+    }
+
+    /**
+     * Prepare a kit for the Setup workflow WITHOUT auto-importing.
+     *
+     * Validates, extracts, scans, and parses the manifest, then stores
+     * metadata so the Kit Detail page can let the user selectively import.
+     * The extracted files are cleaned up — re-extraction from the kept ZIP
+     * happens later during selective import.
+     *
+     * @param int    $post_id  Library CPT entry ID.
+     * @param string $zip_path Local path to the ZIP file.
+     */
+    public function prepare_kit( int $post_id, string $zip_path ): void {
+        // Validate ZIP
+        if ( ! Security::is_valid_zip( $zip_path ) ) {
+            Library::set_error( $post_id, 'File is not a valid ZIP archive.' );
+            return;
+        }
+
+        // Extract
+        Library::update_status( $post_id, 'extracting' );
+        Library::add_log( $post_id, 'Extracting ZIP archive for analysis.' );
+
+        $extract_dir = $this->extract_zip( $zip_path );
+
+        if ( is_wp_error( $extract_dir ) ) {
+            Library::set_error( $post_id, $extract_dir->get_error_message() );
+            return;
+        }
+
+        Library::add_log( $post_id, 'Extraction complete.' );
+
+        // Security scan
+        $suspicious = Security::scan_extracted_files( $extract_dir );
+        if ( ! empty( $suspicious ) ) {
+            Library::add_log( $post_id, 'WARNING: Found ' . count( $suspicious ) . ' suspicious file(s): ' . implode( ', ', array_map( 'basename', $suspicious ) ) );
+        }
+
+        // Parse manifest
+        $manifest = $this->parse_manifest( $extract_dir );
+
+        if ( is_wp_error( $manifest ) ) {
+            Library::add_log( $post_id, 'No manifest.json found. Scanning for template files.' );
+
+            // Even without a manifest, find the template JSON files and build
+            // a synthetic manifest so the Kit Detail page can list them.
+            $template_files = $this->find_template_files( $extract_dir, null );
+
+            if ( ! empty( $template_files ) ) {
+                $synthetic_templates = [];
+                foreach ( $template_files as $idx => $file_info ) {
+                    // Read the JSON to get type info
+                    $data = json_decode( file_get_contents( $file_info['path'] ), true );
+                    $synthetic_templates[] = [
+                        'title'  => $file_info['name'],
+                        'type'   => $data['type'] ?? 'page',
+                        'source' => basename( $file_info['path'] ),
+                        'file'   => basename( $file_info['path'] ),
+                    ];
+                }
+
+                $manifest = [
+                    'name'      => get_the_title( $post_id ),
+                    'templates' => $synthetic_templates,
+                    '_base_dir' => $extract_dir, // will be stale after cleanup
+                ];
+
+                Library::add_log( $post_id, 'Found ' . count( $synthetic_templates ) . ' template file(s) by scanning.' );
+            } else {
+                Library::add_log( $post_id, 'No template files found in ZIP.' );
+                $manifest = null;
+            }
+        }
+
+        if ( $manifest ) {
+            // Strip the _base_dir before storing — it's a temp path that won't exist later.
+            // The selective import handler re-extracts from the ZIP anyway.
+            $manifest_to_store = $manifest;
+            unset( $manifest_to_store['_base_dir'] );
+            update_post_meta( $post_id, '_xv_manifest', $manifest_to_store );
+
+            Library::add_log( $post_id, 'Manifest stored: ' . ( $manifest['name'] ?? 'unnamed' ) . ' (' . count( $manifest['templates'] ?? [] ) . ' templates).' );
+
+            // Store dependencies
+            $deps = $this->extract_dependencies( $manifest );
+            update_post_meta( $post_id, '_xv_dependencies', $deps );
+
+            // Try to get a screenshot/thumbnail from the kit
+            $this->extract_thumbnail( $post_id, $extract_dir, $manifest );
+        }
+
+        // Mark as ready for setup (NOT auto-imported)
+        Library::update_status( $post_id, 'pending' );
+        Library::add_log( $post_id, 'Kit ready for setup. Use the Setup button to choose templates.' );
+
+        // Clean up extracted files — the ZIP is kept for later
+        Xvato::delete_directory( $extract_dir );
+    }
+
+    /**
+     * Try to extract a thumbnail from the kit for the library card.
+     *
+     * @param int    $post_id
+     * @param string $extract_dir
+     * @param array  $manifest
+     */
+    private function extract_thumbnail( int $post_id, string $extract_dir, array $manifest ): void {
+        $thumb_path = null;
+
+        // Check manifest for a thumbnail/preview image
+        $base_dir = $manifest['_base_dir'] ?? $extract_dir;
+        $possible = [
+            $base_dir . '/thumbnail.jpg',
+            $base_dir . '/thumbnail.png',
+            $base_dir . '/preview.jpg',
+            $base_dir . '/preview.png',
+            $base_dir . '/screenshot.jpg',
+            $base_dir . '/screenshot.png',
+        ];
+
+        foreach ( $possible as $p ) {
+            if ( file_exists( $p ) ) {
+                $thumb_path = $p;
+                break;
+            }
+        }
+
+        if ( ! $thumb_path ) {
+            return;
+        }
+
+        // Upload as post thumbnail
+        $upload_dir = wp_upload_dir();
+        $filename   = 'xvato-kit-' . $post_id . '-' . basename( $thumb_path );
+        $dest       = trailingslashit( $upload_dir['path'] ) . $filename;
+
+        if ( copy( $thumb_path, $dest ) ) {
+            $attachment = [
+                'post_mime_type' => wp_check_filetype( $dest )['type'] ?? 'image/jpeg',
+                'post_title'     => sanitize_file_name( $filename ),
+                'post_status'    => 'inherit',
+            ];
+
+            $attach_id = wp_insert_attachment( $attachment, $dest, $post_id );
+            if ( ! is_wp_error( $attach_id ) ) {
+                require_once ABSPATH . 'wp-admin/includes/image.php';
+                $metadata = wp_generate_attachment_metadata( $attach_id, $dest );
+                wp_update_attachment_metadata( $attach_id, $metadata );
+                set_post_thumbnail( $post_id, $attach_id );
+            }
+        }
     }
 
     /**

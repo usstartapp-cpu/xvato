@@ -22,6 +22,8 @@
 
   const TAG = '[Xvato:WPDetect]';
 
+  let hasSent = false; // Only send once per page load
+
   /**
    * Wait for wp-admin to be fully loaded, then extract session info.
    */
@@ -34,11 +36,12 @@
     console.log(TAG, 'WP admin page detected, extracting session info...');
 
     // Try immediately, then retry a few times if wpApiSettings isn't ready yet
-    extractAndSend();
+    if (extractAndSend()) return;
+
     let attempts = 0;
     const retry = setInterval(() => {
       attempts++;
-      if (attempts > 10) {
+      if (hasSent || attempts > 10) {
         clearInterval(retry);
         return;
       }
@@ -69,11 +72,15 @@
 
   /**
    * Extract the WP session info and send it to the service worker.
+   * Returns true if successfully sent (so caller can stop retrying).
    */
   function extractAndSend() {
-    const info = extractWPInfo();
-    if (!info) return;
+    if (hasSent) return true;
 
+    const info = extractWPInfo();
+    if (!info) return false;
+
+    hasSent = true;
     console.log(TAG, 'Sending WP session info:', info.siteUrl, info.username);
 
     try {
@@ -88,8 +95,10 @@
       });
     } catch (e) {
       // Extension context might not be available
+      hasSent = false; // allow retry
       console.warn(TAG, 'Could not send to extension:', e.message);
     }
+    return hasSent;
   }
 
   /**

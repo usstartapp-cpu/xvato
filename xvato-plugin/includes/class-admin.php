@@ -211,18 +211,15 @@ class Admin {
             exit;
         }
 
-        update_post_meta( $post_id, '_bk_zip_path', $zip_path );
+        update_post_meta( $post_id, '_xv_zip_path', $zip_path );
 
+        // Prepare kit: extract manifest & metadata WITHOUT auto-importing templates.
+        // The user will choose which templates to import from the Kit Detail page.
         $importer = new Importer();
-        $importer->process_zip( $post_id, $zip_path );
+        $importer->prepare_kit( $post_id, $zip_path );
 
-        // After successful import, redirect to Kit Detail page for the full workflow
-        $status = get_post_meta( $post_id, '_bk_import_status', true );
-        if ( 'complete' === $status ) {
-            wp_redirect( admin_url( 'admin.php?page=xvato-kit&kit_id=' . $post_id . '&fresh=1' ) );
-        } else {
-            wp_redirect( admin_url( 'admin.php?page=xvato&imported=' . $post_id ) );
-        }
+        // Always redirect to Kit Detail page for selective import workflow
+        wp_redirect( admin_url( 'admin.php?page=xvato-kit&kit_id=' . $post_id . '&fresh=1' ) );
         exit;
     }
 
@@ -239,9 +236,9 @@ class Admin {
             exit;
         }
 
-        $zip_path = get_post_meta( $post_id, '_bk_zip_path', true );
+        $zip_path = get_post_meta( $post_id, '_xv_zip_path', true );
         if ( ! $zip_path || ! file_exists( $zip_path ) ) {
-            $download_url = get_post_meta( $post_id, '_bk_download_url', true );
+            $download_url = get_post_meta( $post_id, '_xv_download_url', true );
             if ( $download_url ) {
                 Library::update_status( $post_id, 'pending' );
                 wp_schedule_single_event( time(), 'xvato_process_import', [ $post_id, $download_url ] );
@@ -255,13 +252,14 @@ class Admin {
         }
 
         Library::update_status( $post_id, 'pending' );
-        update_post_meta( $post_id, '_bk_import_error', '' );
-        update_post_meta( $post_id, '_bk_import_log', [] );
+        update_post_meta( $post_id, '_xv_import_error', '' );
+        update_post_meta( $post_id, '_xv_import_log', [] );
 
+        // Re-prepare the kit (parse manifest) so the user can re-select templates
         $importer = new Importer();
-        $importer->process_zip( $post_id, $zip_path );
+        $importer->prepare_kit( $post_id, $zip_path );
 
-        wp_redirect( admin_url( 'admin.php?page=xvato&reimport=' . $post_id ) );
+        wp_redirect( admin_url( 'admin.php?page=xvato-kit&kit_id=' . $post_id . '&fresh=1' ) );
         exit;
     }
 
@@ -278,7 +276,7 @@ class Admin {
             exit;
         }
 
-        $zip_path = get_post_meta( $post_id, '_bk_zip_path', true );
+        $zip_path = get_post_meta( $post_id, '_xv_zip_path', true );
         if ( $zip_path && file_exists( $zip_path ) ) {
             wp_delete_file( $zip_path );
         }
@@ -331,7 +329,7 @@ class Admin {
             'post_status'    => 'any',
             'meta_query'     => [
                 [
-                    'key'   => '_bk_import_status',
+                    'key'   => '_xv_import_status',
                     'value' => 'failed',
                 ],
             ],
@@ -341,10 +339,10 @@ class Admin {
         $count = 0;
         foreach ( $failed_posts as $post_id ) {
             Library::update_status( $post_id, 'pending' );
-            update_post_meta( $post_id, '_bk_import_error', '' );
+            update_post_meta( $post_id, '_xv_import_error', '' );
             Library::add_log( $post_id, 'Status reset to pending by admin.' );
 
-            $download_url = get_post_meta( $post_id, '_bk_download_url', true );
+            $download_url = get_post_meta( $post_id, '_xv_download_url', true );
             if ( $download_url ) {
                 wp_schedule_single_event( time() + $count, 'xvato_process_import', [ $post_id, $download_url ] );
             }
@@ -387,7 +385,7 @@ class Admin {
                     continue;
                 }
 
-                $zip_path = get_post_meta( $post_id, '_bk_zip_path', true );
+                $zip_path = get_post_meta( $post_id, '_xv_zip_path', true );
                 if ( $zip_path && file_exists( $zip_path ) ) {
                     wp_delete_file( $zip_path );
                 }
@@ -408,11 +406,11 @@ class Admin {
                 }
 
                 Library::update_status( $post_id, 'pending' );
-                update_post_meta( $post_id, '_bk_import_error', '' );
+                update_post_meta( $post_id, '_xv_import_error', '' );
                 Library::add_log( $post_id, 'Bulk re-import queued by admin.' );
 
-                $zip_path     = get_post_meta( $post_id, '_bk_zip_path', true );
-                $download_url = get_post_meta( $post_id, '_bk_download_url', true );
+                $zip_path     = get_post_meta( $post_id, '_xv_zip_path', true );
+                $download_url = get_post_meta( $post_id, '_xv_download_url', true );
 
                 if ( $zip_path && file_exists( $zip_path ) ) {
                     wp_schedule_single_event( time() + $count, 'xvato_process_zip', [ $post_id, $zip_path ] );
@@ -449,9 +447,9 @@ class Admin {
             wp_send_json_error( 'Invalid kit ID.' );
         }
 
-        $manifest = get_post_meta( $post_id, '_bk_manifest', true );
-        $template_ids = get_post_meta( $post_id, '_bk_template_ids', true ) ?: [];
-        $deps = get_post_meta( $post_id, '_bk_dependencies', true ) ?: [];
+        $manifest = get_post_meta( $post_id, '_xv_manifest', true );
+        $template_ids = get_post_meta( $post_id, '_xv_template_ids', true ) ?: [];
+        $deps = get_post_meta( $post_id, '_xv_dependencies', true ) ?: [];
 
         $templates = [];
 
@@ -469,7 +467,11 @@ class Admin {
         } elseif ( ! empty( $template_ids ) ) {
             // Already imported — list by Elementor template IDs
             foreach ( $template_ids as $idx => $tpl_id ) {
-                $tpl_post = get_post( $tpl_id );
+                // Skip placeholder entries from CLI import
+                if ( ! is_numeric( $tpl_id ) || 'cli_import_success' === $tpl_id ) {
+                    continue;
+                }
+                $tpl_post = get_post( (int) $tpl_id );
                 $templates[] = [
                     'index'    => $idx,
                     'title'    => $tpl_post ? $tpl_post->post_title : "Template #{$tpl_id}",
@@ -477,8 +479,28 @@ class Admin {
                     'thumb'    => get_the_post_thumbnail_url( $tpl_id, 'medium' ) ?: '',
                     'file'     => '',
                     'imported' => true,
-                    'post_id'  => $tpl_id,
+                    'post_id'  => (int) $tpl_id,
                 ];
+            }
+
+            // If we only had placeholder IDs and no manifest, show a helpful message
+            if ( empty( $templates ) && empty( $manifest['templates'] ) ) {
+                // The kit was imported via CLI — templates exist but we can't enumerate them individually
+                // Re-extract the ZIP manifest if possible
+                $zip_path = get_post_meta( $post_id, '_xv_zip_path', true );
+                if ( $zip_path && file_exists( $zip_path ) ) {
+                    // Offer re-import to get proper template list
+                    $templates[] = [
+                        'index'    => 0,
+                        'title'    => get_the_title( $post_id ) . ' (full kit)',
+                        'type'     => 'kit',
+                        'thumb'    => '',
+                        'file'     => '',
+                        'imported' => true,
+                        'post_id'  => 0,
+                        'note'     => 'Imported via WP-CLI. Re-import from Setup to get individual template selection.',
+                    ];
+                }
             }
         }
 
@@ -526,8 +548,8 @@ class Admin {
             wp_send_json_error( 'Invalid request.' );
         }
 
-        $manifest = get_post_meta( $post_id, '_bk_manifest', true );
-        $zip_path = get_post_meta( $post_id, '_bk_zip_path', true );
+        $manifest = get_post_meta( $post_id, '_xv_manifest', true );
+        $zip_path = get_post_meta( $post_id, '_xv_zip_path', true );
 
         if ( ! $manifest || empty( $manifest['templates'] ) ) {
             wp_send_json_error( 'No manifest data available for selective import.' );
@@ -564,6 +586,17 @@ class Admin {
                     if ( file_exists( $subdir . '/manifest.json' ) ) {
                         $base_dir = $subdir;
                         break;
+                    }
+                }
+                // If still no manifest base, use the extract dir itself
+                if ( ! $base_dir || ! is_dir( $base_dir ) ) {
+                    $base_dir = $extract_dir;
+                    // Check one level deep for template files
+                    if ( empty( glob( $base_dir . '/*.json' ) ) ) {
+                        $sub = glob( $extract_dir . '/*', GLOB_ONLYDIR );
+                        if ( ! empty( $sub ) ) {
+                            $base_dir = $sub[0]; // use first subdirectory
+                        }
                     }
                 }
             }
@@ -655,15 +688,25 @@ class Admin {
         }
 
         // Update stored template IDs
-        $existing_ids = get_post_meta( $post_id, '_bk_template_ids', true ) ?: [];
+        $existing_ids = get_post_meta( $post_id, '_xv_template_ids', true ) ?: [];
         foreach ( $imported as $imp ) {
             $existing_ids[ $imp['index'] ] = $imp['template_id'];
         }
-        update_post_meta( $post_id, '_bk_template_ids', $existing_ids );
+        update_post_meta( $post_id, '_xv_template_ids', $existing_ids );
+
+        // Update status to complete if we imported anything
+        if ( ! empty( $imported ) ) {
+            Library::update_status( $post_id, 'complete' );
+        }
 
         Library::add_log( $post_id, 'Selective import: ' . count( $imported ) . ' template(s) imported.' );
         if ( ! empty( $created_pages ) ) {
             Library::add_log( $post_id, count( $created_pages ) . ' page(s) created as drafts.' );
+        }
+
+        // Clean up extracted temp files (keep the ZIP)
+        if ( isset( $extract_dir ) && is_dir( $extract_dir ) ) {
+            Xvato::delete_directory( $extract_dir );
         }
 
         wp_send_json_success( [

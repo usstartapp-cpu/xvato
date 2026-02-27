@@ -137,16 +137,17 @@ class RestAPI {
             $immediate = self::try_immediate_import( $post_id, $payload['download_url'] );
 
             if ( $immediate ) {
-                $status = get_post_meta( $post_id, '_bk_import_status', true ) ?: 'processing';
+                $status = get_post_meta( $post_id, '_xv_import_status', true ) ?: 'processing';
                 return new \WP_REST_Response( [
                     'success' => true,
-                    'message' => 'complete' === $status
-                        ? __( 'Import completed successfully!', 'xvato' )
+                    'message' => 'pending' === $status
+                        ? __( 'Kit prepared! Open the Xvato dashboard to select and import templates.', 'xvato' )
                         : __( 'Import is processing.', 'xvato' ),
                     'data'    => [
-                        'job_id'  => $post_id,
-                        'status'  => $status,
-                        'title'   => $payload['title'],
+                        'job_id'   => $post_id,
+                        'status'   => $status,
+                        'title'    => $payload['title'],
+                        'setup_url' => admin_url( 'admin.php?page=xvato-kit&kit_id=' . $post_id . '&fresh=1' ),
                     ],
                 ], 200 );
             }
@@ -161,11 +162,12 @@ class RestAPI {
 
             return new \WP_REST_Response( [
                 'success' => true,
-                'message' => __( 'Import queued for background processing.', 'xvato' ),
+                'message' => __( 'Kit queued for background download. Open the Xvato dashboard to set up.', 'xvato' ),
                 'data'    => [
-                    'job_id'  => $post_id,
-                    'status'  => 'queued',
-                    'title'   => $payload['title'],
+                    'job_id'   => $post_id,
+                    'status'   => 'queued',
+                    'title'    => $payload['title'],
+                    'setup_url' => admin_url( 'admin.php?page=xvato-kit&kit_id=' . $post_id ),
                 ],
             ], 202 );
         }
@@ -205,7 +207,7 @@ class RestAPI {
 
         try {
             $importer = new Importer();
-            $importer->process_from_url( $post_id, $download_url );
+            $importer->prepare_from_url( $post_id, $download_url );
             return true;
         } catch ( \Throwable $e ) {
             Library::set_error( $post_id, 'Immediate import failed: ' . $e->getMessage() );
@@ -249,9 +251,9 @@ class RestAPI {
             );
         }
 
-        $status  = get_post_meta( $post_id, '_bk_import_status', true ) ?: 'unknown';
-        $log     = get_post_meta( $post_id, '_bk_import_log', true ) ?: [];
-        $error   = get_post_meta( $post_id, '_bk_import_error', true ) ?: '';
+        $status  = get_post_meta( $post_id, '_xv_import_status', true ) ?: 'unknown';
+        $log     = get_post_meta( $post_id, '_xv_import_log', true ) ?: [];
+        $error   = get_post_meta( $post_id, '_xv_import_error', true ) ?: '';
 
         return new \WP_REST_Response( [
             'job_id'      => $post_id,
@@ -311,5 +313,11 @@ class RestAPI {
 // ─── Background Import Hook ───────────────────────────────────
 add_action( 'xvato_process_import', function ( int $post_id, string $download_url ) {
     $importer = new Importer();
-    $importer->process_from_url( $post_id, $download_url );
+    $importer->prepare_from_url( $post_id, $download_url );
+}, 10, 2 );
+
+// Background ZIP processing (for bulk re-import / re-prepare)
+add_action( 'xvato_process_zip', function ( int $post_id, string $zip_path ) {
+    $importer = new Importer();
+    $importer->prepare_kit( $post_id, $zip_path );
 }, 10, 2 );

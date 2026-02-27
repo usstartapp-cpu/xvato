@@ -2,7 +2,7 @@
 /**
  * Xvato — Library (Custom Post Type)
  *
- * Registers the bk_template_library CPT and manages metadata.
+ * Registers the xv_template_library CPT and manages metadata.
  *
  * @package Xvato
  */
@@ -21,7 +21,7 @@ class Library {
     }
 
     /**
-     * Register the bk_template_library custom post type.
+     * Register the xv_template_library custom post type.
      */
     public static function register_post_type(): void {
         $labels = [
@@ -68,18 +68,18 @@ class Library {
             'post_title'  => $payload['title'] ?: __( 'Untitled Template Kit', 'xvato' ),
             'post_status' => 'publish',
             'meta_input'  => [
-                '_bk_import_status'  => 'pending',
-                '_bk_source_url'     => $payload['source_url'] ?? '',
-                '_bk_download_url'   => $payload['download_url'] ?? '',
-                '_bk_thumbnail_url'  => $payload['thumbnail_url'] ?? '',
-                '_bk_category'       => $payload['category'] ?? '',
-                '_bk_import_log'     => [],
-                '_bk_import_error'   => '',
-                '_bk_imported_at'    => '',
-                '_bk_template_ids'   => [], // Elementor template IDs after import
-                '_bk_manifest'       => [], // Parsed manifest.json data
-                '_bk_dependencies'   => [], // Required plugins/theme
-                '_bk_zip_path'       => '', // Path to stored ZIP for re-import
+                '_xv_import_status'  => 'pending',
+                '_xv_source_url'     => $payload['source_url'] ?? '',
+                '_xv_download_url'   => $payload['download_url'] ?? '',
+                '_xv_thumbnail_url'  => $payload['thumbnail_url'] ?? '',
+                '_xv_category'       => $payload['category'] ?? '',
+                '_xv_import_log'     => [],
+                '_xv_import_error'   => '',
+                '_xv_imported_at'    => '',
+                '_xv_template_ids'   => [], // Elementor template IDs after import
+                '_xv_manifest'       => [], // Parsed manifest.json data
+                '_xv_dependencies'   => [], // Required plugins/theme
+                '_xv_zip_path'       => '', // Path to stored ZIP for re-import
             ],
         ];
 
@@ -106,10 +106,10 @@ class Library {
      * @param string $status  One of: pending, downloading, extracting, importing, complete, failed
      */
     public static function update_status( int $post_id, string $status ): void {
-        update_post_meta( $post_id, '_bk_import_status', sanitize_key( $status ) );
+        update_post_meta( $post_id, '_xv_import_status', sanitize_key( $status ) );
 
         if ( 'complete' === $status ) {
-            update_post_meta( $post_id, '_bk_imported_at', current_time( 'mysql' ) );
+            update_post_meta( $post_id, '_xv_imported_at', current_time( 'mysql' ) );
         }
     }
 
@@ -120,12 +120,12 @@ class Library {
      * @param string $message
      */
     public static function add_log( int $post_id, string $message ): void {
-        $log   = get_post_meta( $post_id, '_bk_import_log', true ) ?: [];
+        $log   = get_post_meta( $post_id, '_xv_import_log', true ) ?: [];
         $log[] = [
             'time'    => current_time( 'mysql' ),
             'message' => sanitize_text_field( $message ),
         ];
-        update_post_meta( $post_id, '_bk_import_log', $log );
+        update_post_meta( $post_id, '_xv_import_log', $log );
     }
 
     /**
@@ -135,7 +135,7 @@ class Library {
      * @param string $error
      */
     public static function set_error( int $post_id, string $error ): void {
-        update_post_meta( $post_id, '_bk_import_error', sanitize_text_field( $error ) );
+        update_post_meta( $post_id, '_xv_import_error', sanitize_text_field( $error ) );
         self::update_status( $post_id, 'failed' );
         self::add_log( $post_id, 'ERROR: ' . $error );
     }
@@ -152,20 +152,20 @@ class Library {
 
         // Fallback to stored external thumbnail URL
         if ( ! $thumb_url ) {
-            $thumb_url = get_post_meta( $post->ID, '_bk_thumbnail_url', true );
+            $thumb_url = get_post_meta( $post->ID, '_xv_thumbnail_url', true );
         }
 
         return [
             'id'            => $post->ID,
             'title'         => $post->post_title,
-            'status'        => get_post_meta( $post->ID, '_bk_import_status', true ) ?: 'unknown',
+            'status'        => get_post_meta( $post->ID, '_xv_import_status', true ) ?: 'unknown',
             'thumbnail_url' => $thumb_url ?: XVATO_URL . 'assets/placeholder.svg',
-            'category'      => get_post_meta( $post->ID, '_bk_category', true ),
-            'source_url'    => get_post_meta( $post->ID, '_bk_source_url', true ),
-            'imported_at'   => get_post_meta( $post->ID, '_bk_imported_at', true ),
-            'template_ids'  => get_post_meta( $post->ID, '_bk_template_ids', true ) ?: [],
-            'dependencies'  => get_post_meta( $post->ID, '_bk_dependencies', true ) ?: [],
-            'error'         => get_post_meta( $post->ID, '_bk_import_error', true ),
+            'category'      => get_post_meta( $post->ID, '_xv_category', true ),
+            'source_url'    => get_post_meta( $post->ID, '_xv_source_url', true ),
+            'imported_at'   => get_post_meta( $post->ID, '_xv_imported_at', true ),
+            'template_ids'  => get_post_meta( $post->ID, '_xv_template_ids', true ) ?: [],
+            'dependencies'  => get_post_meta( $post->ID, '_xv_dependencies', true ) ?: [],
+            'error'         => get_post_meta( $post->ID, '_xv_import_error', true ),
             'created'       => $post->post_date,
         ];
     }
@@ -203,7 +203,7 @@ class Library {
             "SELECT pm.meta_value as status, COUNT(*) as count
              FROM {$wpdb->posts} p
              JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
-             WHERE p.post_type = %s AND pm.meta_key = '_bk_import_status'
+             WHERE p.post_type = %s AND pm.meta_key = '_xv_import_status'
              GROUP BY pm.meta_value",
             XVATO_CPT
         ) );
