@@ -274,6 +274,14 @@ $reimport     = sanitize_text_field( $_GET['reimport'] ?? '' );
                         <?php endif; ?>
                     </div>
                     <div class="xv-card-actions">
+                        <!-- Setup Kit — the main workflow entry point -->
+                        <a href="<?php echo esc_url( admin_url( 'admin.php?page=xvato-kit&kit_id=' . $post_id ) ); ?>"
+                           class="xv-btn xv-btn--sm xv-btn--primary"
+                           title="<?php esc_attr_e( 'Setup Kit — preview, activate theme, choose pages', 'xvato' ); ?>">
+                            <span class="dashicons dashicons-admin-customizer"></span>
+                            <?php esc_html_e( 'Setup', 'xvato' ); ?>
+                        </a>
+
                         <?php if ( $entry['source_url'] ) : ?>
                             <a href="<?php echo esc_url( $entry['source_url'] ); ?>" target="_blank" rel="noopener" class="xv-btn xv-btn--sm" title="<?php esc_attr_e( 'View on Envato', 'xvato' ); ?>">
                                 <span class="dashicons dashicons-external"></span>

@@ -40,6 +40,12 @@ class Admin {
         // Handle settings export/import
         add_action( 'admin_post_xvato_export_settings', [ self::class, 'handle_export_settings' ] );
         add_action( 'admin_post_xvato_import_settings', [ self::class, 'handle_import_settings' ] );
+
+        // AJAX: Kit detail operations
+        add_action( 'wp_ajax_xvato_get_kit_templates', [ self::class, 'ajax_get_kit_templates' ] );
+        add_action( 'wp_ajax_xvato_import_selected',   [ self::class, 'ajax_import_selected' ] );
+        add_action( 'wp_ajax_xvato_activate_theme',     [ self::class, 'ajax_activate_theme' ] );
+        add_action( 'wp_ajax_xvato_apply_colors',       [ self::class, 'ajax_apply_colors' ] );
     }
 
     /**
@@ -80,6 +86,16 @@ class Admin {
             'manage_options',
             'xvato-settings',
             [ self::class, 'render_settings' ]
+        );
+
+        // Hidden page — Kit Detail (no menu entry, accessed via link)
+        add_submenu_page(
+            null, // hidden
+            __( 'Kit Detail', 'xvato' ),
+            __( 'Kit Detail', 'xvato' ),
+            'manage_options',
+            'xvato-kit',
+            [ self::class, 'render_kit_detail' ]
         );
     }
 
@@ -130,6 +146,7 @@ class Admin {
             'restUrl'   => rest_url( XVATO_REST_NAMESPACE ),
             'nonce'     => wp_create_nonce( 'xvato_admin' ),
             'restNonce' => wp_create_nonce( 'wp_rest' ),
+            'kitUrl'    => admin_url( 'admin.php?page=xvato-kit' ),
         ] );
     }
 
@@ -145,6 +162,13 @@ class Admin {
      */
     public static function render_settings(): void {
         include XVATO_DIR . 'admin/views/settings.php';
+    }
+
+    /**
+     * Render the kit detail page (template selection, page import, etc.).
+     */
+    public static function render_kit_detail(): void {
+        include XVATO_DIR . 'admin/views/kit-detail.php';
     }
 
     // ─── Action Handlers ──────────────────────────────────────
@@ -192,7 +216,13 @@ class Admin {
         $importer = new Importer();
         $importer->process_zip( $post_id, $zip_path );
 
-        wp_redirect( admin_url( 'admin.php?page=xvato&imported=' . $post_id ) );
+        // After successful import, redirect to Kit Detail page for the full workflow
+        $status = get_post_meta( $post_id, '_bk_import_status', true );
+        if ( 'complete' === $status ) {
+            wp_redirect( admin_url( 'admin.php?page=xvato-kit&kit_id=' . $post_id . '&fresh=1' ) );
+        } else {
+            wp_redirect( admin_url( 'admin.php?page=xvato&imported=' . $post_id ) );
+        }
         exit;
     }
 
@@ -400,6 +430,353 @@ class Admin {
             wp_redirect( admin_url( 'admin.php?page=xvato&bulk_reimport=' . $count ) );
             exit;
         }
+    }
+
+    // ─── Kit Detail AJAX Handlers ───────────────────────────────
+
+    /**
+     * AJAX: Return the list of templates inside a kit's ZIP/manifest.
+     */
+    public static function ajax_get_kit_templates(): void {
+        check_ajax_referer( 'xvato_admin', 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( 'Unauthorized.', 403 );
+        }
+
+        $post_id = absint( $_POST['kit_id'] ?? 0 );
+        if ( ! $post_id ) {
+            wp_send_json_error( 'Invalid kit ID.' );
+        }
+
+        $manifest = get_post_meta( $post_id, '_bk_manifest', true );
+        $template_ids = get_post_meta( $post_id, '_bk_template_ids', true ) ?: [];
+        $deps = get_post_meta( $post_id, '_bk_dependencies', true ) ?: [];
+
+        $templates = [];
+
+        if ( ! empty( $manifest['templates'] ) ) {
+            foreach ( $manifest['templates'] as $idx => $tpl ) {
+                $templates[] = [
+                    'index'    => $idx,
+                    'title'    => $tpl['title'] ?? $tpl['name'] ?? ( 'Template ' . ( $idx + 1 ) ),
+                    'type'     => $tpl['type'] ?? $tpl['metadata']['template_type'] ?? 'page',
+                    'thumb'    => $tpl['thumbnail'] ?? '',
+                    'file'     => $tpl['source'] ?? $tpl['file'] ?? '',
+                    'imported' => isset( $template_ids[ $idx ] ),
+                ];
+            }
+        } elseif ( ! empty( $template_ids ) ) {
+            // Already imported — list by Elementor template IDs
+            foreach ( $template_ids as $idx => $tpl_id ) {
+                $tpl_post = get_post( $tpl_id );
+                $templates[] = [
+                    'index'    => $idx,
+                    'title'    => $tpl_post ? $tpl_post->post_title : "Template #{$tpl_id}",
+                    'type'     => get_post_meta( $tpl_id, '_elementor_template_type', true ) ?: 'page',
+                    'thumb'    => get_the_post_thumbnail_url( $tpl_id, 'medium' ) ?: '',
+                    'file'     => '',
+                    'imported' => true,
+                    'post_id'  => $tpl_id,
+                ];
+            }
+        }
+
+        // Extract global colors from manifest
+        $global_colors = [];
+        if ( ! empty( $manifest['global_colors'] ) ) {
+            $global_colors = $manifest['global_colors'];
+        } elseif ( ! empty( $manifest['settings']['colors'] ) ) {
+            $global_colors = $manifest['settings']['colors'];
+        }
+
+        // Theme requirement
+        $theme_slug = $deps['theme'] ?? $manifest['theme'] ?? '';
+        $theme_active = false;
+        if ( $theme_slug ) {
+            $current = wp_get_theme();
+            $theme_active = ( strtolower( $current->get_stylesheet() ) === strtolower( $theme_slug ) );
+        }
+
+        wp_send_json_success( [
+            'templates'     => $templates,
+            'dependencies'  => $deps,
+            'global_colors' => $global_colors,
+            'theme_slug'    => $theme_slug,
+            'theme_active'  => $theme_active,
+            'kit_name'      => get_the_title( $post_id ),
+        ] );
+    }
+
+    /**
+     * AJAX: Import only selected templates from a kit.
+     */
+    public static function ajax_import_selected(): void {
+        check_ajax_referer( 'xvato_admin', 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( 'Unauthorized.', 403 );
+        }
+
+        $post_id  = absint( $_POST['kit_id'] ?? 0 );
+        $selected = array_map( 'absint', (array) ( $_POST['selected'] ?? [] ) );
+        $create_pages = ! empty( $_POST['create_pages'] );
+
+        if ( ! $post_id || empty( $selected ) ) {
+            wp_send_json_error( 'Invalid request.' );
+        }
+
+        $manifest = get_post_meta( $post_id, '_bk_manifest', true );
+        $zip_path = get_post_meta( $post_id, '_bk_zip_path', true );
+
+        if ( ! $manifest || empty( $manifest['templates'] ) ) {
+            wp_send_json_error( 'No manifest data available for selective import.' );
+        }
+
+        if ( ! defined( 'ELEMENTOR_VERSION' ) ) {
+            wp_send_json_error( 'Elementor is not active.' );
+        }
+
+        // Re-extract the ZIP if needed
+        $base_dir = $manifest['_base_dir'] ?? '';
+        if ( ! $base_dir || ! is_dir( $base_dir ) ) {
+            if ( ! $zip_path || ! file_exists( $zip_path ) ) {
+                wp_send_json_error( 'ZIP file not found. Re-import from the library.' );
+            }
+
+            WP_Filesystem();
+            $upload_dir  = wp_upload_dir();
+            $tmp_dir     = trailingslashit( $upload_dir['basedir'] ) . XVATO_TMP_DIR;
+            $extract_dir = trailingslashit( $tmp_dir ) . 'extract-' . wp_generate_uuid4();
+            wp_mkdir_p( $extract_dir );
+            $unzip = unzip_file( $zip_path, $extract_dir );
+
+            if ( is_wp_error( $unzip ) ) {
+                wp_send_json_error( 'Failed to extract: ' . $unzip->get_error_message() );
+            }
+
+            // Re-find manifest base
+            if ( file_exists( $extract_dir . '/manifest.json' ) ) {
+                $base_dir = $extract_dir;
+            } else {
+                $subdirs = glob( $extract_dir . '/*', GLOB_ONLYDIR );
+                foreach ( $subdirs as $subdir ) {
+                    if ( file_exists( $subdir . '/manifest.json' ) ) {
+                        $base_dir = $subdir;
+                        break;
+                    }
+                }
+            }
+        }
+
+        $source = \Elementor\Plugin::$instance->templates_manager->get_source( 'local' );
+        if ( ! $source ) {
+            wp_send_json_error( 'Elementor template source not available.' );
+        }
+
+        $imported   = [];
+        $created_pages = [];
+        $errors     = [];
+
+        foreach ( $selected as $idx ) {
+            if ( ! isset( $manifest['templates'][ $idx ] ) ) {
+                continue;
+            }
+
+            $tpl      = $manifest['templates'][ $idx ];
+            $filename = $tpl['source'] ?? $tpl['file'] ?? '';
+            $name     = $tpl['title'] ?? $tpl['name'] ?? basename( $filename, '.json' );
+
+            if ( ! $filename ) {
+                $errors[] = "Template #{$idx}: no file reference.";
+                continue;
+            }
+
+            $file_path = trailingslashit( $base_dir ) . $filename;
+
+            if ( ! file_exists( $file_path ) ) {
+                $errors[] = "{$name}: file not found.";
+                continue;
+            }
+
+            $result = $source->import_template( $name, $file_path );
+
+            if ( is_wp_error( $result ) ) {
+                $errors[] = "{$name}: " . $result->get_error_message();
+                continue;
+            }
+
+            if ( ! empty( $result ) ) {
+                foreach ( $result as $item ) {
+                    if ( isset( $item['template_id'] ) ) {
+                        $imported[] = [
+                            'index'       => $idx,
+                            'template_id' => $item['template_id'],
+                            'title'       => $name,
+                        ];
+
+                        // If user wants pages created, create a WP page linked to this template
+                        if ( $create_pages ) {
+                            $page_id = wp_insert_post( [
+                                'post_type'   => 'page',
+                                'post_title'  => $name,
+                                'post_status' => 'draft',
+                                'meta_input'  => [
+                                    '_wp_page_template'        => 'elementor_canvas',
+                                    '_elementor_edit_mode'     => 'builder',
+                                ],
+                            ] );
+
+                            if ( ! is_wp_error( $page_id ) ) {
+                                // Copy the template content to the page
+                                $tpl_data = get_post_meta( $item['template_id'], '_elementor_data', true );
+                                if ( $tpl_data ) {
+                                    update_post_meta( $page_id, '_elementor_data', $tpl_data );
+                                }
+                                $tpl_css = get_post_meta( $item['template_id'], '_elementor_css', true );
+                                if ( $tpl_css ) {
+                                    update_post_meta( $page_id, '_elementor_css', $tpl_css );
+                                }
+                                // Copy page settings
+                                $page_settings = get_post_meta( $item['template_id'], '_elementor_page_settings', true );
+                                if ( $page_settings ) {
+                                    update_post_meta( $page_id, '_elementor_page_settings', $page_settings );
+                                }
+                                $created_pages[] = [
+                                    'page_id' => $page_id,
+                                    'title'   => $name,
+                                    'edit_url' => admin_url( 'post.php?post=' . $page_id . '&action=elementor' ),
+                                ];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Update stored template IDs
+        $existing_ids = get_post_meta( $post_id, '_bk_template_ids', true ) ?: [];
+        foreach ( $imported as $imp ) {
+            $existing_ids[ $imp['index'] ] = $imp['template_id'];
+        }
+        update_post_meta( $post_id, '_bk_template_ids', $existing_ids );
+
+        Library::add_log( $post_id, 'Selective import: ' . count( $imported ) . ' template(s) imported.' );
+        if ( ! empty( $created_pages ) ) {
+            Library::add_log( $post_id, count( $created_pages ) . ' page(s) created as drafts.' );
+        }
+
+        wp_send_json_success( [
+            'imported'      => $imported,
+            'created_pages' => $created_pages,
+            'errors'        => $errors,
+        ] );
+    }
+
+    /**
+     * AJAX: Activate a theme required by a kit.
+     */
+    public static function ajax_activate_theme(): void {
+        check_ajax_referer( 'xvato_admin', 'nonce' );
+
+        if ( ! current_user_can( 'switch_themes' ) ) {
+            wp_send_json_error( 'Unauthorized.', 403 );
+        }
+
+        $theme_slug = sanitize_text_field( $_POST['theme'] ?? '' );
+        if ( ! $theme_slug ) {
+            wp_send_json_error( 'No theme specified.' );
+        }
+
+        $theme = wp_get_theme( $theme_slug );
+
+        if ( ! $theme->exists() ) {
+            // Try to install it
+            require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
+            require_once ABSPATH . 'wp-admin/includes/theme.php';
+
+            $api = themes_api( 'theme_information', [ 'slug' => $theme_slug ] );
+            if ( is_wp_error( $api ) ) {
+                wp_send_json_error( 'Theme not found in repository: ' . $api->get_error_message() );
+            }
+
+            $upgrader = new \Theme_Upgrader( new \WP_Ajax_Upgrader_Skin() );
+            $result   = $upgrader->install( $api->download_link );
+
+            if ( is_wp_error( $result ) ) {
+                wp_send_json_error( 'Installation failed: ' . $result->get_error_message() );
+            }
+
+            $theme = wp_get_theme( $theme_slug );
+        }
+
+        if ( $theme->exists() ) {
+            switch_theme( $theme_slug );
+            wp_send_json_success( [
+                'message' => sprintf( 'Theme "%s" activated successfully.', $theme->get( 'Name' ) ),
+                'theme'   => $theme->get( 'Name' ),
+            ] );
+        } else {
+            wp_send_json_error( 'Could not activate theme.' );
+        }
+    }
+
+    /**
+     * AJAX: Apply global colors from a kit to Elementor settings.
+     */
+    public static function ajax_apply_colors(): void {
+        check_ajax_referer( 'xvato_admin', 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( 'Unauthorized.', 403 );
+        }
+
+        $colors = (array) ( $_POST['colors'] ?? [] );
+        if ( empty( $colors ) ) {
+            wp_send_json_error( 'No colors provided.' );
+        }
+
+        if ( ! defined( 'ELEMENTOR_VERSION' ) ) {
+            wp_send_json_error( 'Elementor is not active.' );
+        }
+
+        // Get active Elementor kit
+        $active_kit_id = \Elementor\Plugin::$instance->kits_manager->get_active_id();
+        if ( ! $active_kit_id ) {
+            wp_send_json_error( 'No active Elementor kit found.' );
+        }
+
+        $kit_settings = get_post_meta( $active_kit_id, '_elementor_page_settings', true ) ?: [];
+
+        // Map colors into Elementor's system_colors format
+        $system_colors = $kit_settings['system_colors'] ?? [];
+        $custom_colors = $kit_settings['custom_colors'] ?? [];
+
+        foreach ( $colors as $color ) {
+            $id    = sanitize_key( $color['id'] ?? wp_generate_uuid4() );
+            $title = sanitize_text_field( $color['title'] ?? 'Color' );
+            $value = sanitize_hex_color( $color['color'] ?? '' );
+
+            if ( ! $value ) continue;
+
+            $custom_colors[] = [
+                '_id'   => $id,
+                'title' => $title,
+                'color' => $value,
+            ];
+        }
+
+        $kit_settings['custom_colors'] = $custom_colors;
+        update_post_meta( $active_kit_id, '_elementor_page_settings', $kit_settings );
+
+        // Clear Elementor CSS cache
+        if ( class_exists( '\Elementor\Plugin' ) ) {
+            \Elementor\Plugin::$instance->files_manager->clear_cache();
+        }
+
+        wp_send_json_success( [
+            'message' => count( $colors ) . ' color(s) applied to Elementor kit.',
+        ] );
     }
 
     // ─── Settings Export / Import ─────────────────────────────
