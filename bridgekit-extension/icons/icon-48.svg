@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#8b5cf6"/>
+    </linearGradient>
+  </defs>
+  <rect width="48" height="48" rx="10" fill="url(#g)"/>
+  <!-- Bridge / arch -->
+  <path d="M10 28 Q14 14, 24 14 Q34 14, 38 28" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+  <!-- Pillars -->
+  <line x1="16" y1="22" x2="16" y2="35" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="32" y1="22" x2="32" y2="35" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Road -->
+  <line x1="10" y1="35" x2="38" y2="35" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+  <!-- Arrow up -->
+  <path d="M24 32 L24 20" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M20 24 L24 19 L28 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

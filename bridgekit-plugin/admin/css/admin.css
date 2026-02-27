@@ -1,0 +1,629 @@
+/* ─── BridgeKit Admin Styles ──────────────────────────────────── */
+/* Covers: Dashboard (Library Grid), Settings, Cards, Badges      */
+
+/* ─── Layout ──────────────────────────────────────────────────── */
+.bk-dashboard,
+.bk-settings {
+    max-width: 1400px;
+}
+
+.bk-settings-layout {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.bk-settings-main,
+.bk-settings-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+@media ( max-width: 1200px ) {
+    .bk-settings-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ─── Stats Bar ─────────────────────────────────────────────── */
+.bk-stats {
+    display: flex;
+    gap: 4px;
+    margin: 16px 0;
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.bk-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 14px 24px;
+    text-decoration: none;
+    color: #50575e;
+    flex: 1;
+    transition: all 0.2s;
+    border-right: 1px solid #f0f0f1;
+}
+
+.bk-stat:last-child {
+    border-right: none;
+}
+
+.bk-stat:hover {
+    background: #f6f7f7;
+    color: #2271b1;
+}
+
+.bk-stat.active {
+    background: #2271b1;
+    color: #fff;
+}
+
+.bk-stat-count {
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.bk-stat-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+}
+
+/* ─── Toolbar ───────────────────────────────────────────────── */
+.bk-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    gap: 12px;
+}
+
+.bk-search-form {
+    display: flex;
+    gap: 8px;
+    flex: 1;
+    max-width: 400px;
+}
+
+.bk-search-input {
+    flex: 1;
+    padding: 6px 12px;
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.bk-search-input:focus {
+    outline: none;
+    border-color: #2271b1;
+    box-shadow: 0 0 0 1px #2271b1;
+}
+
+/* ─── Upload Form ───────────────────────────────────────────── */
+.bk-upload-form {
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    animation: bk-slideDown 0.2s ease;
+}
+
+.bk-upload-fields {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-end;
+}
+
+.bk-upload-field {
+    flex: 1;
+    min-width: 180px;
+}
+
+.bk-upload-field label {
+    display: block;
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 4px;
+    color: #1d2327;
+}
+
+.bk-upload-field input[type="text"],
+.bk-upload-field input[type="file"] {
+    width: 100%;
+    padding: 6px 10px;
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+}
+
+@keyframes bk-slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ─── Template Grid ─────────────────────────────────────────── */
+.bk-grid {
+    display: grid;
+    grid-template-columns: repeat( auto-fill, minmax( 280px, 1fr ) );
+    gap: 20px;
+    margin-top: 16px;
+}
+
+.bk-card {
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.bk-grid .bk-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+}
+
+.bk-card-thumb {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    background: #f0f0f1;
+}
+
+.bk-card-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.bk-card-body {
+    padding: 14px 16px;
+}
+
+.bk-card-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 6px 0;
+    line-height: 1.3;
+    color: #1d2327;
+}
+
+.bk-card-category {
+    display: inline-block;
+    font-size: 11px;
+    color: #646970;
+    background: #f0f0f1;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-right: 6px;
+}
+
+.bk-card-date {
+    font-size: 11px;
+    color: #a0a5aa;
+}
+
+.bk-card-error {
+    font-size: 12px;
+    color: #d63638;
+    margin: 6px 0 0;
+    line-height: 1.4;
+}
+
+.bk-card-deps {
+    margin-top: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.bk-dep {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: #e8f0fe;
+    color: #174ea6;
+}
+
+.bk-dep--warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+/* ─── Card Actions ──────────────────────────────────────────── */
+.bk-card-actions {
+    display: flex;
+    gap: 4px;
+    padding: 10px 16px;
+    border-top: 1px solid #f0f0f1;
+    background: #fafafa;
+}
+
+.bk-card-actions .button.button-small {
+    padding: 0 8px;
+    min-height: 28px;
+    line-height: 26px;
+}
+
+.bk-btn-danger:hover {
+    color: #d63638 !important;
+    border-color: #d63638 !important;
+}
+
+/* ─── Badges ────────────────────────────────────────────────── */
+.bk-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 12px;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+/* Badge inside card thumbnail — absolute position */
+.bk-card-thumb .bk-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.bk-badge--pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.bk-badge--downloading,
+.bk-badge--extracting,
+.bk-badge--importing {
+    background: #e8f0fe;
+    color: #1a73e8;
+    animation: bk-pulse-badge 1.5s ease-in-out infinite;
+}
+
+.bk-badge--complete {
+    background: #d4edda;
+    color: #155724;
+}
+
+.bk-badge--failed {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.bk-badge--unknown {
+    background: #f0f0f1;
+    color: #646970;
+}
+
+@keyframes bk-pulse-badge {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+/* ─── Empty State ───────────────────────────────────────────── */
+.bk-empty {
+    text-align: center;
+    padding: 60px 20px;
+    background: #fff;
+    border: 1px dashed #c3c4c7;
+    border-radius: 8px;
+    margin-top: 16px;
+}
+
+.bk-empty-icon {
+    margin-bottom: 16px;
+}
+
+.bk-empty h2 {
+    font-size: 20px;
+    color: #50575e;
+    margin: 0 0 8px;
+}
+
+.bk-empty p {
+    color: #646970;
+    font-size: 14px;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+/* ─── Pagination ────────────────────────────────────────────── */
+.bk-pagination {
+    text-align: center;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid #f0f0f1;
+}
+
+.bk-pagination .page-numbers {
+    display: inline-block;
+    min-width: 32px;
+    padding: 4px 8px;
+    margin: 0 2px;
+    text-align: center;
+    text-decoration: none;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    color: #2271b1;
+    background: #fff;
+    font-size: 13px;
+}
+
+.bk-pagination .page-numbers.current {
+    background: #2271b1;
+    color: #fff;
+    border-color: #2271b1;
+}
+
+.bk-pagination .page-numbers:hover:not(.current) {
+    background: #f6f7f7;
+    border-color: #2271b1;
+}
+
+/* ─── Settings Cards ────────────────────────────────────────── */
+.bk-settings .bk-card {
+    margin: 0;
+}
+
+.bk-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 20px;
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    background: #f6f7f7;
+    border-bottom: 1px solid #c3c4c7;
+    color: #1d2327;
+}
+
+.bk-card-header .dashicons {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: #2271b1;
+}
+
+.bk-card-content {
+    padding: 20px;
+}
+
+.bk-card--danger .bk-card-header {
+    background: #fcf0f1;
+}
+
+.bk-card--danger .bk-card-header .dashicons {
+    color: #d63638;
+}
+
+/* ─── Setup Steps ───────────────────────────────────────────── */
+.bk-steps {
+    margin: 16px 0;
+    padding-left: 0;
+    list-style: none;
+    counter-reset: bk-step;
+}
+
+.bk-steps li {
+    position: relative;
+    padding: 12px 16px 12px 48px;
+    margin-bottom: 8px;
+    background: #f6f7f7;
+    border-radius: 6px;
+    border-left: 3px solid #2271b1;
+    counter-increment: bk-step;
+}
+
+.bk-steps li::before {
+    content: counter(bk-step);
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    width: 24px;
+    height: 24px;
+    line-height: 24px;
+    text-align: center;
+    background: #2271b1;
+    color: #fff;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.bk-steps li strong {
+    display: block;
+    margin-bottom: 4px;
+    color: #1d2327;
+}
+
+.bk-steps li .description {
+    font-size: 13px;
+    color: #646970;
+    margin: 0;
+}
+
+.bk-steps li .notice {
+    margin-top: 8px;
+}
+
+/* ─── Connection Info Table ─────────────────────────────────── */
+.bk-connection-info {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.bk-connection-info h4 {
+    margin: 0 0 10px;
+    font-size: 13px;
+    color: #1d2327;
+}
+
+.bk-info-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.bk-info-table th {
+    text-align: left;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #646970;
+    width: 100px;
+    vertical-align: middle;
+}
+
+.bk-info-table td {
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.bk-info-table code {
+    background: #f0f0f1;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    word-break: break-all;
+    flex: 1;
+}
+
+.bk-copy-btn {
+    flex-shrink: 0;
+}
+
+.bk-copy-btn.copied {
+    color: #00a32a !important;
+    border-color: #00a32a !important;
+}
+
+/* ─── Status Table ──────────────────────────────────────────── */
+.bk-status-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.bk-status-table td {
+    padding: 8px 0;
+    font-size: 13px;
+    border-bottom: 1px solid #f0f0f1;
+}
+
+.bk-status-table tr:last-child td {
+    border-bottom: none;
+}
+
+.bk-status-table td:first-child {
+    color: #646970;
+}
+
+.bk-status-table td:last-child {
+    text-align: right;
+}
+
+/* ─── Quick Links ───────────────────────────────────────────── */
+.bk-quick-links {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.bk-quick-links li {
+    margin: 0;
+}
+
+.bk-quick-links a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 4px;
+    text-decoration: none;
+    color: #2271b1;
+    font-size: 13px;
+    border-bottom: 1px solid #f0f0f1;
+    transition: background 0.15s;
+}
+
+.bk-quick-links li:last-child a {
+    border-bottom: none;
+}
+
+.bk-quick-links a:hover {
+    background: #f6f7f7;
+    border-radius: 4px;
+}
+
+.bk-quick-links .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    color: #a0a5aa;
+}
+
+/* ─── Form Table overrides ──────────────────────────────────── */
+.bk-card .form-table th {
+    padding: 12px 10px 12px 0;
+    font-size: 13px;
+}
+
+.bk-card .form-table td {
+    padding: 10px;
+}
+
+.bk-card .form-table .description {
+    font-size: 12px;
+}
+
+/* ─── Responsive ────────────────────────────────────────────── */
+@media ( max-width: 782px ) {
+    .bk-stats {
+        flex-wrap: wrap;
+    }
+
+    .bk-stat {
+        min-width: 80px;
+    }
+
+    .bk-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .bk-search-form {
+        max-width: none;
+    }
+
+    .bk-grid {
+        grid-template-columns: repeat( auto-fill, minmax( 240px, 1fr ) );
+    }
+
+    .bk-upload-fields {
+        flex-direction: column;
+    }
+
+    .bk-info-table td {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

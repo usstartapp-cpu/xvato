@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.15)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="128" height="128" rx="28" fill="url(#bg)"/>
+  <rect width="128" height="64" rx="28" fill="url(#shine)"/>
+  <!-- Bridge arch -->
+  <path d="M24 76 Q36 34, 64 34 Q92 34, 104 76" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
+  <!-- Left pillar -->
+  <line x1="40" y1="56" x2="40" y2="94" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
+  <!-- Right pillar -->
+  <line x1="88" y1="56" x2="88" y2="94" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
+  <!-- Road -->
+  <line x1="22" y1="94" x2="106" y2="94" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
+  <!-- Upload arrow -->
+  <line x1="64" y1="86" x2="64" y2="50" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
+  <polyline points="52,60 64,46 76,60" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

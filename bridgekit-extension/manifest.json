@@ -1,0 +1,40 @@
+{
+  "manifest_version": 3,
+  "name": "BridgeKit — Envato to WordPress",
+  "version": "0.1.0",
+  "description": "Import Envato Elements Template Kits directly into your WordPress site with one click.",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "notifications"
+  ],
+  "host_permissions": [
+    "https://elements.envato.com/*",
+    "https://*/*"
+  ],
+  "background": {
+    "service_worker": "src/background/sw.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://elements.envato.com/*"],
+      "js": ["src/content/envato-hooks.js"],
+      "css": ["src/content/styles.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "src/popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  }
+}
