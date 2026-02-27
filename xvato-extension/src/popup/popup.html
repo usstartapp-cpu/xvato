@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Xvato</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="xv-popup">
+    <!-- Header -->
+    <header class="xv-header">
+      <div class="xv-logo">
+        <img src="../../icons/xvato-logo.png" alt="Xvato" width="28" height="28">
+        <span class="xv-wordmark">Xvato</span>
+      </div>
+      <div class="xv-header-actions">
+        <button type="button" class="xv-icon-btn" id="xv-theme-toggle" title="Toggle light/dark mode" aria-label="Toggle theme">
+          <svg class="xv-icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <svg class="xv-icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+        <span class="xv-version">v1.0</span>
+      </div>
+    </header>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- VIEW: Connected State                                  -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <div id="xv-connected-view" class="xv-view" hidden>
+      <div class="xv-connected-card">
+        <div class="xv-connected-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <div class="xv-connected-info">
+          <div class="xv-connected-title">Connected</div>
+          <div class="xv-connected-site" id="xv-connected-site">—</div>
+          <div class="xv-connected-user" id="xv-connected-user"></div>
+          <div class="xv-connected-mode" id="xv-connected-mode"></div>
+        </div>
+      </div>
+      <div class="xv-connected-actions">
+        <button type="button" class="xv-btn xv-btn--ghost xv-btn--sm" id="xv-retest-btn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          Re-test
+        </button>
+        <button type="button" class="xv-btn xv-btn--danger-ghost xv-btn--sm" id="xv-disconnect-btn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+          Disconnect
+        </button>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- VIEW: Setup (detection + manual form)                  -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <div id="xv-setup-view" class="xv-view">
+      <!-- Connection Status -->
+      <div id="xv-status" class="xv-status xv-status--idle">
+        <div class="xv-status-dot"></div>
+        <span id="xv-status-text">Scanning for WordPress sites…</span>
+      </div>
+
+      <!-- Scanning indicator -->
+      <div id="xv-accounts-scanning" class="xv-accounts-scanning" hidden>
+        <div class="xv-scanning-spinner"></div>
+        <span>Scanning for WordPress accounts…</span>
+      </div>
+
+      <!-- Detected WP Accounts -->
+      <div id="xv-accounts-section" class="xv-accounts-section" hidden>
+        <div class="xv-accounts-header">
+          <div class="xv-accounts-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span>WordPress Sites Detected</span>
+          </div>
+          <button type="button" class="xv-accounts-refresh" id="xv-accounts-refresh" title="Rescan">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          </button>
+        </div>
+        <div id="xv-accounts-list" class="xv-accounts-list">
+          <!-- Dynamically populated -->
+        </div>
+        <p class="xv-accounts-hint">
+          Click <strong>Connect</strong> to link instantly using your active WP session — no password needed.
+        </p>
+      </div>
+
+      <!-- No accounts found message -->
+      <div id="xv-no-accounts" class="xv-no-accounts-box" hidden>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <p>No WordPress sessions detected.<br>Log in to your WP admin first, or connect manually below.</p>
+      </div>
+
+      <!-- Manual form toggle -->
+      <button type="button" class="xv-manual-toggle" id="xv-manual-toggle">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span id="xv-manual-toggle-text">Connect with Application Password</span>
+        <svg class="xv-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+
+      <!-- Manual Settings Form (collapsed by default) -->
+      <form id="xv-settings-form" class="xv-manual-form" hidden autocomplete="off">
+        <div class="xv-field">
+          <label for="xv-wp-url">Site URL</label>
+          <div class="xv-input-wrap">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            <input type="url" id="xv-wp-url" placeholder="https://yoursite.com" required spellcheck="false">
+          </div>
+        </div>
+
+        <div class="xv-field">
+          <label for="xv-wp-user">Username</label>
+          <div class="xv-input-wrap">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <input type="text" id="xv-wp-user" placeholder="admin" required autocomplete="username" spellcheck="false">
+          </div>
+        </div>
+
+        <div class="xv-field">
+          <label for="xv-wp-app-password">Application Password</label>
+          <div class="xv-input-wrap">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <input type="password" id="xv-wp-app-password" placeholder="xxxx xxxx xxxx xxxx" required autocomplete="current-password">
+          </div>
+          <small>WP Admin → Users → Profile → Application Passwords</small>
+        </div>
+
+        <div class="xv-actions">
+          <button type="submit" class="xv-btn xv-btn--primary" id="xv-save">
+            Save & Connect
+          </button>
+          <button type="button" class="xv-btn xv-btn--ghost" id="xv-test">
+            Test Connection
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Message area (shared between views) -->
+    <div id="xv-message" class="xv-message" hidden></div>
+
+    <!-- Footer -->
+    <div class="xv-footer">
+      <a href="https://app.envato.com/wordpress" target="_blank" rel="noopener">
+        Browse Envato Elements
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      </a>
+    </div>
+  </div>
+
+  <script src="popup.js" type="module"></script>
+</body>
+</html>

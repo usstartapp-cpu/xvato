@@ -17,7 +17,12 @@ dist/
 build/
 
 # WordPress
-bridgekit-plugin/admin/build/
+xvato-plugin/admin/build/
+
+# Packaging / Build Artifacts
+*.crx
+*.pem
+*.zip
 
 # Logs
 *.log

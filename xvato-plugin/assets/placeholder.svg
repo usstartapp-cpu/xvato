@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="250" viewBox="0 0 400 250">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#18181b"/>
+      <stop offset="100%" stop-color="#0e0e10"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="250" fill="url(#bg)"/>
+  <g transform="translate(200,110)" opacity="0.25">
+    <rect x="-24" y="-28" width="48" height="56" rx="6" fill="none" stroke="#87E64C" stroke-width="2"/>
+    <path d="M-8,-8 L8,-8 L8,8 L-8,8 Z" fill="none" stroke="#87E64C" stroke-width="1.5"/>
+    <circle cx="-4" cy="-2" r="2" fill="#87E64C"/>
+    <path d="M-8,4 L-2,-2 L2,2 L8,-4" fill="none" stroke="#87E64C" stroke-width="1.5"/>
+  </g>
+  <text x="200" y="160" text-anchor="middle" fill="#737380" font-family="Inter, -apple-system, sans-serif" font-size="12" font-weight="500">No Preview Available</text>
+</svg>
