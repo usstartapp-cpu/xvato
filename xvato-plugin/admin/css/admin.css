@@ -1179,15 +1179,21 @@
 }
 
 /* ─── WP Admin Menu Override ────────────────────────────────── */
-#adminmenu .toplevel_page_xvato .wp-menu-image img {
-  width: 20px;
-  height: 20px;
-  padding: 0;
+#adminmenu .toplevel_page_xvato .wp-menu-image img,
+#adminmenu .toplevel_page_xvato .wp-menu-image svg {
+  width: 20px !important;
+  height: 20px !important;
+  max-width: 20px !important;
+  max-height: 20px !important;
+  padding: 7px 0 0 0 !important;
   opacity: 0.85;
+  object-fit: contain;
 }
 
 #adminmenu .toplevel_page_xvato:hover .wp-menu-image img,
-#adminmenu .toplevel_page_xvato.current .wp-menu-image img {
+#adminmenu .toplevel_page_xvato.current .wp-menu-image img,
+#adminmenu .toplevel_page_xvato:hover .wp-menu-image svg,
+#adminmenu .toplevel_page_xvato.current .wp-menu-image svg {
   opacity: 1;
 }
 

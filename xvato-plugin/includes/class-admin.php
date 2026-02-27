@@ -45,13 +45,21 @@ class Admin {
      * Register admin menu pages.
      */
     public static function register_menus(): void {
+        // Simple "X" monochrome SVG icon for WP admin sidebar (20×20)
+        // WordPress colorizes it automatically to match the admin color scheme
+        $icon_svg = 'data:image/svg+xml;base64,' . base64_encode(
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none">'
+            . '<path d="M4 4L10 10M10 10L16 4M10 10L4 16M10 10L16 16" stroke="black" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>'
+            . '</svg>'
+        );
+
         add_menu_page(
             __( 'Xvato', 'xvato' ),
             __( 'Xvato', 'xvato' ),
             'manage_options',
             'xvato',
             [ self::class, 'render_dashboard' ],
-            XVATO_URL . 'assets/xvato-logo.png',
+            $icon_svg,
             65
         );
 
