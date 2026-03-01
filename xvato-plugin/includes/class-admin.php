@@ -52,13 +52,8 @@ class Admin {
      * Register admin menu pages.
      */
     public static function register_menus(): void {
-        // Simple "X" monochrome SVG icon for WP admin sidebar (20×20)
-        // WordPress colorizes it automatically to match the admin color scheme
-        $icon_svg = 'data:image/svg+xml;base64,' . base64_encode(
-            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none">'
-            . '<path d="M4 4L10 10M10 10L16 4M10 10L4 16M10 10L16 16" stroke="black" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>'
-            . '</svg>'
-        );
+        // Full-colour Xvato logo SVG as admin menu icon (served as asset URL)
+        $icon_url = XVATO_URL . 'assets/xvato-icon-wp.svg';
 
         add_menu_page(
             __( 'Xvato', 'xvato' ),
@@ -66,7 +61,7 @@ class Admin {
             'manage_options',
             'xvato',
             [ self::class, 'render_dashboard' ],
-            $icon_svg,
+            $icon_url,
             65
         );
 
@@ -106,15 +101,9 @@ class Admin {
     public static function inline_menu_icon_css(): void {
         echo '<style id="xvato-menu-icon">
 #adminmenu .toplevel_page_xvato .wp-menu-image{display:flex!important;align-items:center!important;justify-content:center!important;height:100%!important}
-#adminmenu .toplevel_page_xvato .wp-menu-image img,
-#adminmenu .toplevel_page_xvato .wp-menu-image svg{width:20px!important;height:20px!important;min-width:20px!important;min-height:20px!important;max-width:20px!important;max-height:20px!important;padding:0!important;margin:0!important;opacity:.85;object-fit:contain;display:block!important}
-#adminmenu .toplevel_page_xvato .wp-menu-image *{max-width:20px!important;max-height:20px!important}
+#adminmenu .toplevel_page_xvato .wp-menu-image img{width:20px!important;height:20px!important;min-width:20px!important;min-height:20px!important;max-width:20px!important;max-height:20px!important;padding:0!important;margin:0!important;object-fit:contain;display:block!important;opacity:1!important;filter:none!important}
 #adminmenu .toplevel_page_xvato .wp-menu-name{display:inline-flex!important;align-items:center!important;vertical-align:middle!important}
 #adminmenu .toplevel_page_xvato>a{display:flex!important;align-items:center!important}
-#adminmenu .toplevel_page_xvato:hover .wp-menu-image img,
-#adminmenu .toplevel_page_xvato.current .wp-menu-image img,
-#adminmenu .toplevel_page_xvato:hover .wp-menu-image svg,
-#adminmenu .toplevel_page_xvato.current .wp-menu-image svg{opacity:1}
 </style>';
     }
 
